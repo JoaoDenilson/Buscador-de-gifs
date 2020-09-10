@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:buscador_de_gifs/ui/gif_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:transparent_image/transparent_image.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -25,13 +27,40 @@ class _HomePageState extends State<HomePage> {
         crossAxisSpacing: 10.0,
         mainAxisSpacing: 10.0
       ),
-      itemCount:  snapshot.data["data"].length,
+      itemCount:  snapshot.data["data"].length + 1,
       itemBuilder: (context, index){
-        return Image.network(
-          snapshot.data["data"][index]["images"]["fixed_height"]["url"],
-          height: 300.0,
-          fit: BoxFit.cover,
-        );
+        if (index == snapshot.data["data"].length){
+          return GestureDetector(
+            child: Center(
+              child: Text(
+                "Carregar mais...", 
+                style: TextStyle(color: Colors.white, fontSize: 22.0)
+              )
+            ),
+            onTap: (){
+              setState(() {
+                _offset += 19;
+              });
+            },
+          );
+        }
+        else{
+          return GestureDetector(
+            child: FadeInImage.memoryNetwork(
+              placeholder: kTransparentImage,
+              image: snapshot.data["data"][index]["images"]["fixed_height"]["url"],
+              height: 300.0,
+              fit: BoxFit.cover,
+            ),
+            onTap: (){
+              Navigator.push((context), MaterialPageRoute(
+                  builder: (context) {
+                    return GifPage(snapshot.data["data"][index]);
+                  }
+                ));
+            },
+          );
+        }
       },
     );
   }
@@ -52,13 +81,15 @@ class _HomePageState extends State<HomePage> {
           case ConnectionState.waiting:
           case ConnectionState.none:
             //Cria um loading
-            return Container(
+            return Center(
+              child: Container(
               width: 200.0,
               height: 200.0,
               alignment: Alignment.center,
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 strokeWidth: 5.0,
+                ),
               ),
             );
           default: 
